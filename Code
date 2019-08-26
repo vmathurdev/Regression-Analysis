@@ -1,0 +1,353 @@
+# Statement: Prediction of the rated overall quality of white wine from 11 Chemical Properties.
+
+install.packages("corrplot")
+install.packages("PerformanceAnalytics")
+install.packages("ggplot2")
+install.packages("Hmisc")
+install.packages("jtools")
+
+library(corrplot)
+library(PerformanceAnalytics)
+library(ggplot2)
+library(Hmisc)
+library(jtools)
+
+# Checking the current working directory
+
+getwd()
+
+# Getting the Wine Quality Data from the csv file in to R
+wine.data <- read.csv("whitewinequality.csv")
+
+#Viewing the structure of the data 
+
+str(wine.data)
+
+# all the column values are of type numeric or integer
+
+# Viewing first few rows of the data set.
+
+head(wine.data)
+
+# Target Variable : sensory quality (score between 0 and 10) based on the median ratings of at least 
+# 3 evaluations made by wine experts. Each expert graded the wine quality between 0 (very bad) and 10 (very excellent).
+
+# Predictor variables: 
+#  fixed acidity , volatile acidity , citric acid , residual sugar , chlorides , free sulfur dioxide 
+#  total sulfur dioxide , density , pH , sulphates , alcohol
+
+# Column Names in the dataset
+colnames(wine.data)
+
+# [1] "fixed.acidity"        "volatile.acidity"     "citric.acid"          "residual.sugar"       "chlorides"           
+# [6] "free.sulfur.dioxide"  "total.sulfur.dioxide" "density"              "pH"                   "sulphates"           
+# [11] "alcohol"              "quality" 
+
+# Populating pair wise data for all the variables.
+
+#jpeg('pairplot.jpg')
+#pairs(wine.data)
+#dev.off
+
+
+# Question 1 : Explore the data and discuss any issues.
+
+summary(wine.data)
+
+# The missing value check can be done in one statement as below
+
+colSums(is.na(wine.data))
+
+#using function describe from package Hmisc
+
+describe(wine.data)
+
+
+# Questions 1 B - Histogram for each column / variable
+
+# Histogram for fixed.acidity column
+
+summary(wine.data$fixed.acidity)
+
+ggplot(data = wine.data, mapping = aes(x = fixed.acidity)) +
+  geom_histogram(binwidth = 1, color = "black", fill = "lightyellow") +
+  xlab("Fixed Acidity")
+
+# Histogram for volatile.acidity column
+
+summary(wine.data$volatile.acidity)
+
+ggplot(data = wine.data, mapping = aes(x = volatile.acidity)) +
+  geom_histogram(binwidth = 0.1, color = "black", fill = "steelblue") +
+  xlab("Volatile Acidity")
+
+# Histogram for citric acid 
+
+summary(wine.data$citric.acid)
+
+ggplot(data = wine.data, mapping = aes(x = citric.acid)) +
+  geom_histogram(binwidth = 0.1, color = "black", fill = "steelblue") +
+  xlab("Citric Acid")
+
+
+# Histogram for Residual Sugar
+
+summary(wine.data$residual.sugar)
+
+ggplot(data = wine.data, mapping = aes(x = residual.sugar)) +
+  geom_histogram(binwidth = 2, color = "black", fill = "steelblue") +
+  xlab("Residula Sugar") + 
+  xlim(0, 30)
+
+# Histogram for chlorides
+
+summary(wine.data$chlorides)
+
+ggplot(data = wine.data, mapping = aes(x = chlorides)) +
+  geom_histogram(binwidth = 0.01, color = "black", fill = "steelblue") +
+  xlab("Chlorides") 
+
+
+# Histogram of free sulphur diaoxide
+
+summary(wine.data$free.sulfur.dioxide)
+
+ggplot(data = wine.data, mapping = aes(x = free.sulfur.dioxide)) +
+  geom_histogram(binwidth = 20, color = "black", fill = "steelblue") +
+  xlab("Free Sulfur Dioxide") 
+
+# Histogram of total sulphur diaoxide
+
+summary(wine.data$total.sulfur.dioxide)
+
+ggplot(data = wine.data, mapping = aes(x = (total.sulfur.dioxide))) +
+  geom_histogram(binwidth = 20, color = "black", fill = "steelblue") +
+  xlab("Total Sulfur Dioxide") 
+
+# Histogram of density
+
+summary(wine.data$density)
+
+ggplot(data = wine.data, mapping = aes(x = density)) +
+  geom_histogram(binwidth = 0.001, color = "black", fill = "steelblue") +
+  xlab("Density") 
+
+
+# Histogram of pH
+
+summary(wine.data$pH)
+
+ggplot(data = wine.data, mapping = aes(x = pH)) +
+  geom_histogram(binwidth = 0.1, color = "black", fill = "steelblue") +
+  xlab("pH Value") 
+
+
+# Histogram of sulphates
+
+summary(wine.data$sulphates)
+
+ggplot(data = wine.data, mapping = aes(x = sulphates)) +
+  geom_histogram(binwidth = 0.1, color = "black", fill = "steelblue") +
+  xlab("sulphates") 
+
+
+# Histogram of alcohol
+
+summary(wine.data$alcohol)
+
+ggplot(data = wine.data, mapping = aes(x = alcohol)) +
+  geom_histogram(binwidth = 0.1, color = "black", fill = "steelblue") +
+  xlab("Alcohol Percentage")
+
+
+# Question 1 c
+# Correlation between the variables
+cor(wine.data)
+
+# cor plot 
+require(corrplot)
+corrplot(cor(wine.data),type = "upper", order = "hclust")
+
+# Correlation using the PerformanceAnalytics package
+
+require(PerformanceAnalytics)
+chart.Correlation(wine.data, histogram = T, pch = 19)
+
+# Getting the pairwise correlation between the variables
+
+pairs(wine.data)
+
+
+#----------------------------------------------------------------------
+
+#2A Create training (70%) and test (30%) subsets of the wine dataframe. 
+#Set the seed to 123. Call these wine.train and wine.test, respectively. 
+#Print the dimensions of each of the subsets.
+
+# Create training and validation subsets of the data
+
+# Set the seed to a number to make the sample repeatable
+set.seed(123) 
+
+# Assigning the row numbers
+
+n.train <- round(nrow(wine.data)* 0.7,0) 
+
+# This produces the list of rows for the training set
+sub <- sample(nrow(wine.data),n.train) 
+
+head(sub)
+
+# Creating the training subset
+
+wine.train <- wine.data[sub,] 
+
+# All the remaining data gets assigned to test set
+wine.test <- wine.data[-sub,] 
+
+# Check the dimensions of wine.train dataset
+dim(wine.train)
+
+# Check the dimensions of wine.test dataset
+dim(wine.test) 
+
+
+#2B - Regressing the sensory qualities on predictors using just the training data.
+# Calling it model reg.train
+
+names(wine.train)
+
+#[1] "fixed.acidity"        "volatile.acidity"    
+#[3] "citric.acid"          "residual.sugar"      
+#[5] "chlorides"            "free.sulfur.dioxide" 
+#[7] "total.sulfur.dioxide" "density"             
+#[9] "pH"                   "sulphates"           
+#[11] "alcohol"              "quality"  
+
+reg.train <- lm(quality ~ fixed.acidity + volatile.acidity + citric.acid +
+                  residual.sugar + chlorides + free.sulfur.dioxide +
+                  total.sulfur.dioxide + density + pH + sulphates + alcohol,
+                data = wine.train)
+
+summary(reg.train)
+
+# R2 = 0.2752, Adjusted R2 = 0.2729
+
+plot(reg.train$fitted, reg.train$residuals, col = "blue", xlab = "Fitted Value from the Model", ylab = "Model Residuals")
+abline(h=0, col = "steelblue", lwd = 4, lty = 3)
+
+
+# p value of citric acid column is more than 0.05, removing it and rerunning 
+# the regression
+
+reg.train <- update(reg.train, .~. - citric.acid)
+summary(reg.train)
+
+plot(reg.train$fitted, reg.train$residuals, col = "blue",xlab = "Fitted Value from the Model", ylab = "Model Residuals")
+abline(h=0, col = "steelblue", lwd = 4, lty = 3)
+
+# there is actually no change in the R2 and adjusted R2 after removing the 
+# citric acid. R2 = 0.2752, Adjusted R2 = 0.2731
+
+#p value for chlorides is > 0.05 -> 0.5391, removing it from the model
+
+reg.train <- update(reg.train, .~. - chlorides, data = wine.train)
+summary(reg.train)
+
+plot(reg.train$fitted, reg.train$residuals, col = "blue",xlab = "Fitted Value from the Model", ylab = "Model Residuals")
+abline(h=0, col = "steelblue", lwd = 4, lty = 3)
+
+# R2 and adjusted R2 remains almost the same to be R2 - 0.2751, Adjusted R2 - 0.2732
+
+# p value for total sulfur diaoxide is 0.46 which is > 0.05 
+
+reg.train <- update(reg.train, .~. - total.sulfur.dioxide, data = wine.train)
+summary(reg.train)
+
+plot(reg.train$fitted, reg.train$residuals, col = "blue",xlab = "Fitted Value from the Model", ylab = "Model Residuals")
+abline(h=0, col = "steelblue", lwd = 4, lty = 3)
+
+# R2 - 0.275, Adjusted R2 = 0.2733
+
+# Final Model is with columns 
+
+# The 8 predictors are statistically significant, 8 predictors in the model are significant with very low p values
+# fixed.acidity
+# volatile.acidity
+# residual.sugar
+# free.sulfur.dioxide
+# density
+# pH
+# sulphates
+# alcohol
+
+# The predictors which needs to be dropped are as follows, keeping the below three predictors had very less or no impact on the R2 values 
+
+# citric.acid
+# chlorides
+# total.sulfur.dioxide
+
+
+#2C Create predictions using the reg.train model using the training data. Assigning the model to train.pred.
+#-----------------------------------------------------------------------------------------------------------
+
+train.pred <- predict(reg.train, newdata = wine.train)
+
+plot(x = wine.train$quality,y = train.pred, pch = 16, col = "red",
+     xlab = "Quality from Training Dataset", 
+     ylab = "Predicted Wine Quality Values",
+     main = "Plot bw Predicted Vs Actual (Wine Quality from Training DS)")
+
+
+
+#2D Create predictions using the reg.train model using the test data. Assigning the model to test.pred.
+
+test.pred <- predict(reg.train, newdata = wine.test)
+
+plot(x = wine.test$quality, y = test.pred, pch = 16, col = "steelblue",
+     xlab = "Quality from Test Dataset", 
+     ylab = "Predicted Wine Quality Values",
+     main = "Plot bw Predicted Vs Actual (Wine Quality from Test DS)")
+
+
+#2E Plot the training data predictions versus the residuals from the 
+# training data.
+# i. Comment on the results.
+
+residual.train <- train.pred - wine.train$quality
+
+plot(x=train.pred,y = residual.train,pch=16,col = "red")
+lines(lowess(y=residual.train,x=train.pred),
+        col="blue", lwd=3, lty=4)
+abline(h=0, lwd=2, col="darkgreen")
+
+
+
+#2F 
+
+residual.test <- test.pred - wine.test$quality
+
+plot(x=test.pred,y = residual.test,pch=16,col = "darkgreen")
+lines(lowess(y=residual.test,x=test.pred),
+        col="blue", lwd=3, lty=4)
+abline(h=0, lwd=2, col="orange")
+
+#2G i# Root mean square error or RMSE
+(RMSE.train <- (sqrt(mean(residual.train^2))))
+(RMSE.test  <- (sqrt(mean(residual.test^2))))
+
+
+
+# 2G ii # Mean absolute percentage error or MAPE
+(MAPE.train <- mean(abs(residual.train/wine.train$quality)))
+(MAPE.test <- mean(abs(residual.test/wine.test$quality)))
+
+#2G iii # Prepare a summary table comparing the results for the training and validation data 
+#in terms of RMSE, and MAPE.
+
+summary.results <- matrix(c(MAPE.train,MAPE.test,
+                            RMSE.train,RMSE.test), byrow=TRUE,ncol=2, nrow=2)
+colnames(summary.results) <- c("Train","Test")
+rownames(summary.results) <- c("MAPE", "RMSE")
+round(summary.results,digits = 3)
+
